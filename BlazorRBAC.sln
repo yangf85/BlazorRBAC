@@ -1,33 +1,30 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36717.8 d17.14
+VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
-		readme.md = readme.md
+		C:\Users\yangf\Downloads\00-项目总览.md = C:\Users\yangf\Downloads\00-项目总览.md
+		C:\Users\yangf\Downloads\01-Day01-环境与数据库.md = C:\Users\yangf\Downloads\01-Day01-环境与数据库.md
+		C:\Users\yangf\Downloads\02-Day02-项目搭建.md = C:\Users\yangf\Downloads\02-Day02-项目搭建.md
+		C:\Users\yangf\Downloads\03-Day03-实体与初始化.md = C:\Users\yangf\Downloads\03-Day03-实体与初始化.md
+		C:\Users\yangf\Downloads\04-Day04-认证与JWT.md = C:\Users\yangf\Downloads\04-Day04-认证与JWT.md
+		C:\Users\yangf\Downloads\05-Day05-权限验证.md = C:\Users\yangf\Downloads\05-Day05-权限验证.md
+		C:\Users\yangf\Downloads\06-Day06-Blazor认证.md = C:\Users\yangf\Downloads\06-Day06-Blazor认证.md
+		C:\Users\yangf\Downloads\07-Day07-动态菜单UI.md = C:\Users\yangf\Downloads\07-Day07-动态菜单UI.md
+		C:\Users\yangf\Downloads\08-Day08-后台管理.md = C:\Users\yangf\Downloads\08-Day08-后台管理.md
+		C:\Users\yangf\Downloads\09-Day09-微信登录.md = C:\Users\yangf\Downloads\09-Day09-微信登录.md
+		C:\Users\yangf\Downloads\10-Day10-优化完善.md = C:\Users\yangf\Downloads\10-Day10-优化完善.md
+		C:\Users\yangf\Downloads\99-常见问题FAQ.md = C:\Users\yangf\Downloads\99-常见问题FAQ.md
+		C:\Users\yangf\Downloads\BlazorRBAC.md = C:\Users\yangf\Downloads\BlazorRBAC.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{305D5F6F-F160-4410-8811-DC8D292B80AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorRBAC.Api", "BlazorRBAC.Api\BlazorRBAC.Api.csproj", "{916B25E0-54C0-41C7-8079-09D62F750359}"
-EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{916B25E0-54C0-41C7-8079-09D62F750359}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{916B25E0-54C0-41C7-8079-09D62F750359}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{916B25E0-54C0-41C7-8079-09D62F750359}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{916B25E0-54C0-41C7-8079-09D62F750359}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{916B25E0-54C0-41C7-8079-09D62F750359} = {305D5F6F-F160-4410-8811-DC8D292B80AB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DC6ABC56-8F4B-430A-8D09-AFF0EC639CDB}
