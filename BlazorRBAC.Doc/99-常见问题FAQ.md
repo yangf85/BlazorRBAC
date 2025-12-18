@@ -1,244 +1,279 @@
 # 常见问题 FAQ
 
-> 学习过程中可能遇到的问题和解决方案
+## Day 2 - 项目搭建
 
----
+### Q1: API 和 Web 项目都要配置 HTTPS 吗？
 
-## 🔧 环境与配置
+**问题**：开发环境是否需要 HTTPS？
 
-### Q1：PostgreSQL 连接失败？
+**答案**：推荐都配置 HTTPS
+- ✅ 开发生产环境一致
+- ✅ 避免混合内容错误（HTTPS 调用 HTTP 会被阻止）
+- ✅ Blazor Server 的 SignalR 在 HTTPS 下更稳定
 
-**错误信息**：`Connection refused` 或 `could not connect to server`
+**配置方式**：
+```json
+// launchSettings.json
+"applicationUrl": "https://localhost:7129;http://localhost:5129"
+```
 
-**解决方案**：
-1. 检查 PostgreSQL 服务是否运行
-   ```bash
-   # Windows
-   pg_ctl status
-   
-   # Linux/Mac
-   sudo systemctl status postgresql
-   ```
-2. 检查端口是否正确（默认 5432）
-3. 检查防火墙设置
-4. 验证连接字符串中的用户名密码
-
-### Q2：FreeSql 自动同步表失败？
-
-**问题**：`UseAutoSyncStructure(true)` 不生效
-
-**解决方案**：
-1. 确保实体类有 `[Table]` 特性
-2. 手动调用 `CodeFirst.SyncStructure<T>()`
-3. 检查数据库用户是否有 CREATE TABLE 权限
-
-### Q3：NuGet 包安装慢？
-
-**解决方案**：
-配置国内源（nuget.org 镜像）
+**信任证书**：
 ```bash
-dotnet nuget add source https://nuget.cdn.azure.cn/v3/index.json -n azure
+dotnet dev-certs https --trust
 ```
 
 ---
 
-## 🔐 认证相关
+### Q2: 启动时浏览器没有自动打开？
 
-### Q4：JWT Token 验证失败？
+**原因**：`launchSettings.json` 中 `launchBrowser: false`
 
-**错误信息**：`IDX10503: Signature validation failed`
+**解决**：修改配置
+```json
+{
+  "https": {
+    "launchBrowser": true,
+    "launchUrl": "scalar/v1",  // 指定启动页面
+    "applicationUrl": "https://localhost:7129"
+  }
+}
+```
 
-**原因**：
-- SecretKey 不一致（API 和配置文件）
-- SecretKey 长度不够（至少32位）
+---
 
-**解决方案**：
+### Q3: PostgreSQL 连接失败，密码错误？
+
+**错误信息**：
+```
+No password has been provided but the backend requires one
+```
+
+**解决方法**：
+
+**方法1**：尝试常见密码
+- `postgres`
+- `123456`
+- `admin`
+
+**方法2**：pgAdmin 中查看保存的密码
+- 右键服务器 → 属性 → Connection
+
+**方法3**：重置密码（修改 pg_hba.conf）
+```
+# 临时改为 trust
+host    all    all    127.0.0.1/32    trust
+
+# 重启服务，用 psql 修改密码
+ALTER USER postgres PASSWORD 'newpassword';
+
+# 改回 scram-sha-256，再次重启
+```
+
+---
+
+### Q4: 文件夹命名与 NuGet 包冲突？
+
+**问题**：创建 `FreeSql` 文件夹导致命名空间混淆
+
+**错误示例**：
+```
+Infrastructure/
+└── FreeSql/          ← 和 FreeSql NuGet 包冲突
+    └── FreeSqlSetup.cs
+```
+
+**正确做法**：使用语义化命名
+```
+Infrastructure/
+└── Database/         ← 避免冲突，语义清晰
+    └── FreeSqlSetup.cs
+```
+
+**规则**：避免用 NuGet 包同名作为文件夹名
+
+---
+
+### Q5: FluentValidation.AspNetCore 已过时？
+
+**问题**：安装时提示包已废弃
+
+**原因**：FluentValidation 11.0+ 不再需要 AspNetCore 扩展包
+
+**正确安装**：
+```
+✅ FluentValidation
+✅ FluentValidation.DependencyInjectionExtensions
+❌ FluentValidation.AspNetCore (不需要)
+```
+
+**手动注册验证器**：
 ```csharp
-// 确保 appsettings.json 和 JwtService 使用相同的 Key
-"SecretKey": "YourSuperSecretKey12345678901234567890"  // 至少32字符
-```
-
-### Q5：Blazor Server 获取不到用户信息？
-
-**问题**：`AuthenticationState` 总是匿名用户
-
-**解决方案**：
-1. 检查 Token 是否正确存储在 LocalStorage
-2. 确认 `CustomAuthStateProvider` 注册正确
-3. 使用浏览器开发者工具查看 Storage
-
-### Q6：密码加密后无法验证？
-
-**问题**：`BCrypt.Verify()` 总是返回 false
-
-**原因**：
-- 使用了不同的 BCrypt 库
-- 哈希值被截断（数据库字段太短）
-
-**解决方案**：
-```sql
--- 确保字段长度足够
-password_hash VARCHAR(200)  -- BCrypt 哈希长度为 60，但留足空间
+services.AddValidatorsFromAssemblyContaining<LoginValidator>();
 ```
 
 ---
 
-## 🎨 UI 相关
+### Q6: Scalar API 文档主题不生效？
 
-### Q7：MudBlazor 组件不显示？
+**问题**：配置主题后界面没变化
 
-**问题**：页面空白或样式错误
+**可能原因**：
+- Scalar.AspNetCore 版本不支持
+- 配置方式不正确
 
-**解决方案**：
-1. 确认 `_Host.cshtml` 引入了 MudBlazor CSS/JS
-   ```html
-   <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-   <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-   ```
-2. 检查 `Program.cs` 是否添加了 `AddMudServices()`
-
-### Q8：动态菜单不刷新？
-
-**问题**：添加新菜单后，前端看不到
-
-**解决方案**：
-1. 清除浏览器缓存
-2. 重新登录（Token 中不包含菜单信息，需要重新请求）
-3. 使用 `StateHasChanged()` 强制刷新组件
-
----
-
-## 🐛 数据库相关
-
-### Q9：外键约束错误？
-
-**错误信息**：`violates foreign key constraint`
-
-**原因**：
-- 删除数据时，有其他表引用
-- 插入数据时，外键 ID 不存在
-
-**解决方案**：
-```sql
--- 使用 ON DELETE CASCADE
-FOREIGN KEY (user_id) REFERENCES sys_user(id) ON DELETE CASCADE
-```
-
-### Q10：菜单树查询太慢？
-
-**问题**：用户多了后，菜单查询变慢
-
-**解决方案**：
-1. 添加索引
-   ```sql
-   CREATE INDEX idx_menu_parent ON sys_menu(parent_id);
-   CREATE INDEX idx_user_role ON sys_user_role(user_id);
-   ```
-2. 使用缓存（Redis 或内存缓存）
-
----
-
-## 🚀 部署相关
-
-### Q11：生产环境连接字符串怎么配置？
-
-**解决方案**：
-使用环境变量或 User Secrets
-
-```bash
-# 开发环境
-dotnet user-secrets set "ConnectionStrings:Default" "Host=..."
-
-# 生产环境（Docker）
-docker run -e ConnectionStrings__Default="Host=..."
-```
-
-### Q12：Blazor Server SignalR 连接失败？
-
-**问题**：控制台报错 `Failed to start the connection`
-
-**解决方案**：
-1. 检查防火墙/负载均衡配置
-2. 启用 WebSocket
-   ```csharp
-   app.UseWebSockets();
-   app.MapBlazorHub();
-   ```
-
----
-
-## 💡 最佳实践
-
-### Q13：如何管理大量菜单？
-
-**建议**：
-- 使用菜单编码规范：`module-function-page`
-- 定期清理无用菜单
-- 考虑实现"菜单组"概念
-
-### Q14：如何处理并发登录？
-
-**方案**：
-1. **单设备登录**：新 Token 使旧 Token 失效
-2. **多设备登录**：Token 中加入设备信息
-
-### Q15：如何实现"记住我"功能？
-
-**实现**：
+**简化方案**：使用默认主题
 ```csharp
-// 生成长期有效的 RefreshToken（7天）
-var refreshToken = GenerateRefreshToken(userId);
-await _localStorage.SetAsync("refreshToken", refreshToken);
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("BlazorRBAC API");
+    // 主题功能可选，不影响核心功能
+});
 ```
 
 ---
 
-## 📝 调试技巧
+### Q7: StackOverflowException 无限递归？
 
-### 使用 Spectre.Console 美化输出
-
+**错误代码**：
 ```csharp
-using Spectre.Console;
+public static WebApplication UseSerilogRequestLogging(this WebApplication app)
+{
+    app.UseSerilogRequestLogging();  // ← 调用了自己！
+    return app;
+}
+```
 
-// 表格输出
-var table = new Table();
-table.AddColumn("用户名");
-table.AddColumn("角色");
-table.AddRow("admin", "SuperAdmin");
-AnsiConsole.Write(table);
+**原因**：方法名和 Serilog 扩展方法重名，导致递归
 
-// 进度条
-await AnsiConsole.Progress()
-    .StartAsync(async ctx =>
+**解决方案1**：改方法名
+```csharp
+public static WebApplication UseRequestLogging(this WebApplication app)
+{
+    app.UseSerilogRequestLogging();  // ← 调用 Serilog 的方法
+    return app;
+}
+```
+
+**解决方案2**：不包装，直接使用
+```csharp
+// Program.cs 中直接调用 Serilog 提供的方法
+app.UseSerilogRequestLogging();
+```
+
+---
+
+### Q8: 访问 https://localhost:7129/ 显示 404？
+
+**原因**：根路径没有配置任何端点
+
+**解决**：访问具体的 API 路径
+```
+✅ https://localhost:7129/api/test/ping
+✅ https://localhost:7129/scalar/v1
+❌ https://localhost:7129/
+```
+
+---
+
+### Q9: 扩展方法太多，Program.cs 会不会越来越乱？
+
+**不会**：这正是扩展方法模式的优势
+
+**架构原则**：
+- ServiceCollectionExtensions：服务注册（`Add*`）
+- ApplicationBuilderExtensions：中间件配置（`Use*`）
+- 专用扩展类：如 SerilogExtensions
+
+**Program.cs 始终保持简洁**：
+```csharp
+builder.Services.AddDatabase(builder.Configuration);
+builder.Services.AddApiDocumentation();
+app.UseApiDocumentation();
+```
+
+---
+
+## 通用问题
+
+### Q10: 如何查看项目使用的端口？
+
+**方法1**：查看 `launchSettings.json`
+```json
+"applicationUrl": "https://localhost:7129;http://localhost:5129"
+```
+
+**方法2**：查看控制台输出
+```
+Now listening on: https://localhost:7129
+```
+
+---
+
+### Q11: logs 文件夹需要手动创建吗？
+
+**不需要**：Serilog 第一次写入时会自动创建
+
+**日志位置**：
+```
+BlazorRBAC.Api/
+└── logs/
+    └── app-20241218.log
+```
+
+---
+
+### Q12: 为什么不用顶级语句（Top-level statements）？
+
+**原因**：保持传统的 Main 方法结构更清晰
+
+**顶级语句**：
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+// ...
+```
+
+**Main 方法**：
+```csharp
+public class Program
+{
+    public static void Main(string[] args)
     {
-        var task = ctx.AddTask("初始化数据...");
-        await SeedData();
-        task.Increment(100);
-    });
+        var builder = WebApplication.CreateBuilder(args);
+        // ...
+    }
+}
 ```
 
-### 使用 Serilog 记录关键信息
+两种都可以，看个人偏好。本项目使用 Main 方法。
 
+---
+
+## 调试技巧
+
+### 1. 查看 Serilog 日志
+```
+控制台：实时查看
+文件：logs/app-yyyyMMdd.log
+```
+
+### 2. 测试 API 接口
+```
+Scalar：https://localhost:7129/scalar/v1
+直接访问：https://localhost:7129/api/test/ping
+```
+
+### 3. 检查数据库连接
 ```csharp
-Log.Information("用户 {Username} 登录成功", username);
-Log.Warning("权限验证失败：{UserId} 访问 {Resource}", userId, resource);
-Log.Error(ex, "数据库连接失败");
+// TestController
+[HttpGet("db-connection")]
+public IActionResult TestDatabaseConnection()
+{
+    var version = _fsql.Ado.ExecuteScalar("SELECT version()");
+    return Ok(version);
+}
 ```
 
 ---
 
-## 🔍 更多帮助
-
-### 官方文档
-- [Blazor](https://learn.microsoft.com/zh-cn/aspnet/core/blazor/)
-- [FreeSql](https://freesql.net/)
-- [MudBlazor](https://mudblazor.com/)
-
-### 社区资源
-- GitHub Issues
-- Stack Overflow
-- 中文开发者社区
-
----
-
-[⬅️ 返回目录](./README.md)
+**更新日期**：2024-12-18  
+**适用范围**：Day 2 项目搭建阶段
