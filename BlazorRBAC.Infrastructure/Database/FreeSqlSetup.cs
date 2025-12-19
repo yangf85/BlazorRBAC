@@ -1,4 +1,6 @@
-﻿using FreeSql;
+﻿using BlazorRBAC.Domain.Entities;
+using FreeSql;
+using FreeSql.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,11 +20,29 @@ public static class FreeSqlSetup
         var freeSql = new FreeSqlBuilder()
             .UseConnectionString(DataType.PostgreSQL, connectionString)
             .UseAutoSyncStructure(true)  // 自动同步实体结构到数据库
+            .UseMonitorCommand(cmd =>
+            {
+                // 开发环境输出 SQL（可选）
+                Console.WriteLine($"[SQL] {cmd.CommandText}");
+            })
             .Build();
 
         // 注册为单例
         services.AddSingleton<IFreeSql>(freeSql);
+        services.AddSingleton<SeedDataService>();
 
         return services;
+    }
+
+    /// <summary>
+    /// 同步所有实体的表结构
+    /// </summary>
+    public static void SyncStructure(this IFreeSql fsql)
+    {
+        fsql.CodeFirst.SyncStructure<User>();
+        fsql.CodeFirst.SyncStructure<Role>();
+        fsql.CodeFirst.SyncStructure<Menu>();
+        fsql.CodeFirst.SyncStructure<UserRole>();
+        fsql.CodeFirst.SyncStructure<RoleMenu>();
     }
 }
