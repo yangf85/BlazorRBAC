@@ -11,12 +11,18 @@ public class RoleMenu : BaseEntity
     /// <summary>
     /// 角色ID
     /// </summary>
-    [Column(Position = 11)]
+    [Column(Position = 11, IsPrimary = true)]
     public int RoleId { get; set; }
 
     /// <summary>
     /// 菜单ID
     /// </summary>
-    [Column(Position = 12)]
+    [Column(Position = 12, IsPrimary = true)]
     public int MenuId { get; set; }
+
+    [Navigate(nameof(RoleId))]
+    public Role Role { get; set; }
+
+    [Navigate(nameof(MenuId))]
+    public Menu Menu { get; set; }
 }

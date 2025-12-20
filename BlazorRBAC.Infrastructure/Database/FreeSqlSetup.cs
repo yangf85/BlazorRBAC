@@ -27,6 +27,8 @@ public static class FreeSqlSetup
             })
             .Build();
 
+        freeSql.SyncStructure();
+
         // 注册为单例
         services.AddSingleton<IFreeSql>(freeSql);
         services.AddSingleton<SeedDataService>();

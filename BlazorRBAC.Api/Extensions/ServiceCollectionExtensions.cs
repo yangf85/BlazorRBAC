@@ -1,4 +1,9 @@
-﻿using BlazorRBAC.Infrastructure.Database;
+﻿using System.Text;
+using BlazorRBAC.Application.Services;
+using BlazorRBAC.Infrastructure.Database;
+using BlazorRBAC.Infrastructure.Jwt;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace BlazorRBAC.Api.Extensions;
 
@@ -57,7 +62,38 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // TODO: Day 4 实现
+        // 1. 注册 JWT 配置
+        services.Configure<JwtSettings>(
+            configuration.GetSection(JwtSettings.SectionName)
+        );
+
+        // 2. 注册 JWT 服务
+        services.AddScoped<JwtService>();
+
+        // 3. 配置 JWT 认证
+        var jwtSettings = configuration
+            .GetSection(JwtSettings.SectionName)
+            .Get<JwtSettings>()!;
+
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings.Audience,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+        services.AddAuthorization();
+
         return services;
     }
 
@@ -67,8 +103,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(
         this IServiceCollection services)
     {
-        // TODO: 注册 Application 层的服务
-        // services.AddScoped<IUserService, UserService>();
+        // 注册 Application 层的服务
+        services.AddScoped<AuthService>();
+
+        // TODO: 后续添加其他服务
+        // services.AddScoped<UserService>();
+        // services.AddScoped<RoleService>();
+        // services.AddScoped<MenuService>();
 
         return services;
     }
@@ -79,7 +120,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddValidators(
         this IServiceCollection services)
     {
-        // TODO: Day 3 实现 FluentValidation
+        // TODO: Day 后续实现 FluentValidation
+        // services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
         return services;
     }
 
@@ -89,7 +131,8 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMapster(
         this IServiceCollection services)
     {
-        // TODO: Day 3 实现 Mapster 配置
+        // TODO: Day 后续实现 Mapster 配置
+        // services.AddMapster();
         return services;
     }
 }

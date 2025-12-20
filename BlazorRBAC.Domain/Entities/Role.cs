@@ -37,4 +37,10 @@ public class Role : AuditEntity
     /// </summary>
     [Navigate(ManyToMany = typeof(RoleMenu))]
     public List<Menu> Menus { get; set; } = new();
+
+    /// <summary>
+    /// 导航属性：拥有此角色的用户列表（反向导航）
+    /// </summary>
+    [Navigate(ManyToMany = typeof(UserRole))]
+    public List<User> Users { get; set; } = [];
 }
