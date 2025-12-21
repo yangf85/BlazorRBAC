@@ -26,7 +26,7 @@ public class AuthService
     {
         // 检查用户名是否存在
         if (await _fsql.Select<User>().AnyAsync(u => u.Username == request.Username))
-            return Result.Fail("用户名已存在");
+            return Result.Failure("用户名已存在");
 
         // 创建用户
         var user = new User
@@ -42,7 +42,7 @@ public class AuthService
         // 分配默认角色（普通用户，RoleId=3）
         await _fsql.Insert(new UserRole { UserId = (int)userId, RoleId = 3 }).ExecuteAffrowsAsync();
 
-        return Result.Ok("注册成功");
+        return Result.Success("注册成功");
     }
 
     /// <summary>
@@ -57,11 +57,11 @@ public class AuthService
             .FirstAsync();
 
         if (user == null)
-            return Result<LoginResponse>.Fail("用户不存在或已禁用");
+            return Result<LoginResponse>.Failure("用户不存在或已禁用");
 
         // 验证密码
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-            return Result<LoginResponse>.Fail("密码错误");
+            return Result<LoginResponse>.Failure("密码错误");
 
         // 生成 Token
         var roles = user.Roles.Select(r => r.RoleCode).ToList();
@@ -74,6 +74,6 @@ public class AuthService
             Roles: roles
         );
 
-        return Result<LoginResponse>.Ok(response, "登录成功");
+        return Result<LoginResponse>.Success(response, "登录成功");
     }
 }

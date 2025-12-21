@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.RegisterAsync(request);
 
-        return result.Success
+        return result.IsSuccess
             ? Ok(result)
             : BadRequest(result);
     }
@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginAsync(request);
 
-        return result.Success
+        return result.IsSuccess
             ? Ok(result)
             : Unauthorized(result);
     }

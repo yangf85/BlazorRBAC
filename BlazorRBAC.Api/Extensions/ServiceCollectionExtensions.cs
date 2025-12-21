@@ -4,6 +4,7 @@ using BlazorRBAC.Infrastructure.Database;
 using BlazorRBAC.Infrastructure.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;  // ← 新增
 
 namespace BlazorRBAC.Api.Extensions;
 
@@ -19,9 +20,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // 调用 Infrastructure 层的 FreeSql 配置
         services.AddFreeSqlSetup(configuration);
-
         return services;
     }
 
@@ -31,7 +30,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApiDocumentation(
         this IServiceCollection services)
     {
-        // OpenAPI 文档生成
         services.AddOpenApi(options =>
         {
             options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -45,6 +43,35 @@ public static class ServiceCollectionExtensions
                     {
                         Name = "开发团队",
                         Email = "dev@blazorrbac.com"
+                    }
+                };
+
+                // ========== JWT 安全方案 ==========
+                document.Components ??= new OpenApiComponents();
+                document.Components.SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>
+                {
+                    ["Bearer"] = new OpenApiSecurityScheme
+                    {
+                        Type = SecuritySchemeType.Http,
+                        Scheme = "bearer",
+                        BearerFormat = "JWT",
+                        In = ParameterLocation.Header,
+                        Description = "JWT Token（登录后获取，无需 Bearer 前缀）"
+                    }
+                };
+
+                document.SecurityRequirements = new List<OpenApiSecurityRequirement>
+                {
+                    new()
+                    {
+                        [new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        }] = Array.Empty<string>()
                     }
                 };
 
@@ -103,13 +130,12 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplicationServices(
         this IServiceCollection services)
     {
-        // 注册 Application 层的服务
         services.AddScoped<AuthService>();
+        services.AddScoped<MenuService>();
 
         // TODO: 后续添加其他服务
         // services.AddScoped<UserService>();
         // services.AddScoped<RoleService>();
-        // services.AddScoped<MenuService>();
 
         return services;
     }
@@ -120,7 +146,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddValidators(
         this IServiceCollection services)
     {
-        // TODO: Day 后续实现 FluentValidation
+        // TODO: 后续实现 FluentValidation
         // services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
         return services;
     }
@@ -131,8 +157,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMapster(
         this IServiceCollection services)
     {
-        // TODO: Day 后续实现 Mapster 配置
-        // services.AddMapster();
+        // TODO: 后续实现 Mapster 配置
         return services;
     }
 }
