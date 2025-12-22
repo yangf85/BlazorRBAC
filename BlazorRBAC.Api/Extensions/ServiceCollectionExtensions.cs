@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿using BlazorRBAC.Api.Filters;
 using BlazorRBAC.Application.Services;
 using BlazorRBAC.Infrastructure.Database;
 using BlazorRBAC.Infrastructure.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;  // ← 新增
+using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace BlazorRBAC.Api.Extensions;
 
@@ -136,6 +139,38 @@ public static class ServiceCollectionExtensions
         // TODO: 后续添加其他服务
         // services.AddScoped<UserService>();
         // services.AddScoped<RoleService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// 添加控制器和全局过滤器
+    /// </summary>
+    public static IServiceCollection AddControllersWithFilters(this IServiceCollection services)
+    {
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<UnifiedResponseFilter>();
+        })
+        .AddJsonOptions(options =>
+        {
+            // 枚举序列化为字符串（PascalCase）
+            options.JsonSerializerOptions.Converters.Add(
+                new JsonStringEnumConverter());
+
+            // ✅ 属性命名使用 PascalCase（不设置或设置为 null）
+            options.JsonSerializerOptions.PropertyNamingPolicy = null;
+
+            // 忽略 null 值
+            options.JsonSerializerOptions.DefaultIgnoreCondition =
+                JsonIgnoreCondition.WhenWritingNull;
+
+            // 允许尾随逗号
+            options.JsonSerializerOptions.AllowTrailingCommas = true;
+
+            // 反序列化时不区分大小写
+            options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        });
 
         return services;
     }

@@ -26,7 +26,7 @@ public class AuthService
     {
         // 检查用户名是否存在
         if (await _fsql.Select<User>().AnyAsync(u => u.Username == request.Username))
-            return Result.Failure("用户名已存在");
+            return Result.AlreadyExists("用户名已存在");
 
         // 创建用户
         var user = new User

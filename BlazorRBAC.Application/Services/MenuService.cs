@@ -63,7 +63,7 @@ public class MenuService
 
             var menuDtos = MapToDto(menuTree);
 
-            return Result<List<MenuDto>>.Success(menuDtos);
+            return Result<List<MenuDto>>.Success(menuDtos, "查询菜单成功");
         }
         catch (Exception ex)
         {

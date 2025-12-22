@@ -16,7 +16,7 @@ try
     builder.AddSerilog();
 
     // ¿ØÖÆÆ÷
-    builder.Services.AddControllers();
+    builder.Services.AddControllersWithFilters();
 
     // Êý¾Ý¿â
     builder.Services.AddDatabase(builder.Configuration);
