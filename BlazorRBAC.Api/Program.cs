@@ -27,6 +27,9 @@ try
     // JWT 认证
     builder.Services.AddJwtAuthentication(builder.Configuration);
 
+    // ? 新增：CORS 配置
+    builder.Services.AddCorsPolicy(builder.Configuration);
+
     // 业务服务
     builder.Services.AddApplicationServices();
 
@@ -41,6 +44,9 @@ try
 
     // HTTPS 重定向
     app.UseHttpsRedirection();
+
+    // ? 新增：CORS 中间件（必须在 UseAuthentication 之前）
+    app.UseCorsPolicy();
 
     // 请求日志
     app.UseRequestLogging();

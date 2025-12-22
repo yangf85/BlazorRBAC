@@ -46,6 +46,15 @@ public static class ApplicationBuilderExtensions
     }
 
     /// <summary>
+    /// 配置 CORS 中间件
+    /// </summary>
+    public static WebApplication UseCorsPolicy(this WebApplication app)
+    {
+        app.UseCors("AllowBlazorWeb");
+        return app;
+    }
+
+    /// <summary>
     /// 配置认证和授权中间件
     /// 注意：必须在 UseRouting 之后、MapControllers 之前
     /// </summary>

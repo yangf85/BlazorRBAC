@@ -1,59 +1,107 @@
-﻿@page "/"
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorRBAC.Web.Services
+@inject AuthenticationStateProvider AuthStateProvider
+@inject CustomAuthenticationStateProvider CustomAuthStateProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 
-<PageTitle>Home</PageTitle>
+@if (_isChecking)
+{
+    <MudContainer Class="d-flex justify-center align-center" Style="height: 100vh;">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+    </MudContainer>
+}
+else if (_isAuthenticated)
+{
+    <PageTitle>首页</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 9 Template!</MudText>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+        <!-- ✅ 修改：添加 flex 布局和退出按钮 -->
+        <div class="d-flex justify-space-between align-center mb-4">
+            <MudText Typo="Typo.h3">
+                欢迎回来，@_userName
+            </MudText>
+            
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Error" 
+                      StartIcon="@Icons.Material.Filled.Logout"
+                      OnClick="HandleLogoutAsync">
+                退出登录
+            </MudButton>
+        </div>
 
-<MudAlert Severity="Severity.Normal" ContentAlignment="HorizontalAlignment.Start">
-    You can find documentation and examples on our website here:
-    <MudLink Href="https://mudblazor.com" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        <b>www.mudblazor.com</b>
-    </MudLink>
-</MudAlert>
+        <MudPaper Class="pa-4" Elevation="2">
+            <MudText Typo="Typo.h6">系统信息</MudText>
+            <MudDivider Class="my-2" />
+            <MudText>用户ID: @_userId</MudText>
+            <MudText>角色: @string.Join(", ", _roles)</MudText>
+        </MudPaper>
+    </MudContainer>
+}
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">Interactivity in this Template</MudText>
-<br />
-<MudText Typo="Typo.body2">
-    When you opt for the "Global" Interactivity Location, <br />
-    the render modes are defined in App.razor and consequently apply to all child components.<br />
-    In this case, providers are globally set in the MainLayout.<br />
-    <br />
-    On the other hand, if you choose the "Per page/component" Interactivity Location,<br />
-    it is necessary to include the <br />
-    <br />
-    &lt;MudPopoverProvider /&gt; <br />
-    &lt;MudDialogProvider /&gt; <br />
-    &lt;MudSnackbarProvider /&gt; <br />
-    <br />
-    components on every interactive page.<br />
-    <br />
-    If a render mode is not specified for a page, it defaults to Server-Side Rendering (SSR),<br />
-    similar to this page. While MudBlazor allows pages to be rendered in SSR,<br />
-    please note that interactive features, such as buttons and dropdown menus, will not be functional.
-</MudText>
+@code {
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">What's New in Blazor with the Release of .NET 9</MudText>
-<br />
+    private bool _isChecking = true;
+    private bool _isAuthenticated = false;
+    private string _userName = string.Empty;
+    private string _userId = string.Empty;
+    private List<string> _roles = new();
 
-<MudText Typo="Typo.h6" GutterBottom="true">Prerendering</MudText>
-<MudText Typo="Typo.body2" GutterBottom="true">
-    If you're exploring the features of .NET 9 Blazor,<br /> you might be pleasantly surprised to learn that each page is prerendered on the server,<br /> regardless of the selected render mode.<br /><br />
-    This means that you'll need to inject all necessary services on the server,<br /> even when opting for the wasm (WebAssembly) render mode.<br /><br />
-    This prerendering functionality is crucial to ensuring that WebAssembly mode feels fast and responsive,<br /> especially when it comes to initial page load times.<br /><br />
-    For more information on how to detect prerendering and leverage the RenderContext, you can refer to the following link:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issuecomment-1783568121" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 获取认证状态
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
 
-<br />
-<MudText Typo="Typo.h6" GutterBottom="true">InteractiveAuto</MudText>
-<MudText Typo="Typo.body2">
-    A discussion on how to achieve this can be found here:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issue-1950424116" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
+            _isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+            if (!_isAuthenticated)
+            {
+                // 未登录 → 跳转登录页
+                Navigation.NavigateTo("/login", true);
+                return;
+            }
+
+            // 已登录 → 提取用户信息
+            _userName = user.Identity?.Name ?? "未知用户";
+            _userId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+            _roles = user.FindAll(System.Security.Claims.ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+        }
+        catch (Exception)
+        {
+            // 出错 → 跳转登录页
+            Navigation.NavigateTo("/login", true);
+        }
+        finally
+        {
+            _isChecking = false;
+        }
+    }
+
+    /// <summary>
+    /// ✅ 新增：处理退出登录
+    /// </summary>
+    private async Task HandleLogoutAsync()
+    {
+        try
+        {
+            // 清除认证状态和 Token
+            await CustomAuthStateProvider.MarkUserAsLoggedOutAsync();
+
+            // 显示提示
+            Snackbar.Add("已退出登录", Severity.Info);
+
+            // 跳转到登录页
+            Navigation.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"退出失败：{ex.Message}", Severity.Error);
+        }
+    }
+}

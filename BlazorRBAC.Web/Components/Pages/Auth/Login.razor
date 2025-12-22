@@ -1,0 +1,52 @@
+﻿@page "/login"
+@namespace BlazorRBAC.Web.Pages
+@using BlazorRBAC.Application.Dtos
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudPaper Elevation="3" Class="pa-8">
+        <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">
+            BlazorRBAC 登录
+        </MudText>
+
+        <MudForm @ref="_form" Class="mt-6">
+            <MudTextField @bind-Value="_username"
+                          Label="用户名"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          RequiredError="请输入用户名" />
+
+            <MudTextField @bind-Value="_password"
+                          Label="密码"
+                          Variant="Variant.Outlined"
+                          InputType="InputType.Password"
+                          Required="true"
+                          RequiredError="请输入密码"
+                          Class="mt-4" />
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Size="Size.Large"
+                       Class="mt-6"
+                       OnClick="HandleLoginAsync"
+                       Disabled="_isLoading">
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>登录中...</span>
+                }
+                else
+                {
+                    <span>登录</span>
+                }
+            </MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>

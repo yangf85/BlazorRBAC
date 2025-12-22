@@ -128,6 +128,28 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// 添加 CORS 策略
+    /// </summary>
+    public static IServiceCollection AddCorsPolicy(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowBlazorWeb", policy =>
+            {
+                policy.SetIsOriginAllowed(origin =>
+                    new Uri(origin).Host == "localhost")
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowCredentials();
+            });
+        });
+
+        return services;
+    }
+
+    /// <summary>
     /// 添加业务服务
     /// </summary>
     public static IServiceCollection AddApplicationServices(
